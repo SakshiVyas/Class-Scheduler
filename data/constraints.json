@@ -1,0 +1,78 @@
+{
+  "scheduleSettings": {
+    "workingDays": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday"
+    ],
+    "dayStartTime": "09:00",
+    "dayEndTime": "17:00",
+    "slotMinutes": 30
+  },
+
+  "classes": [
+    {
+      "id": "CS101",
+      "name": "Algorithms",
+      "professorId": "P001",
+      "enrolledStudents": 55,
+      "studentGroups": ["CS_YEAR_1"],
+      "durationMinutes": 90,
+      "classesPerWeek": 2
+    },
+    {
+      "id": "CS102",
+      "name": "Programming",
+      "professorId": "P002",
+      "enrolledStudents": 30,
+      "studentGroups": ["CS_YEAR_2"],
+      "durationMinutes": 90,
+      "classesPerWeek": 2
+    },
+    {
+      "id": "MA101",
+      "name": "Mathematics",
+      "professorId": "P003",
+      "enrolledStudents": 50,
+      "studentGroups": ["CS_YEAR_1"],
+      "durationMinutes": 60,
+      "classesPerWeek": 2
+    },
+    {
+      "id": "CS103",
+      "name": "Databases",
+      "professorId": "P001",
+      "enrolledStudents": 25,
+      "studentGroups": ["CS_YEAR_2"],
+      "durationMinutes": 60,
+      "classesPerWeek": 2
+    },
+    {
+      "id": "GR115",
+      "name": "German",
+      "professorId": "P004",
+      "enrolledStudents": 6,
+      "studentGroups": ["CS_YEAR_3"],
+      "durationMinutes": 60,
+      "classesPerWeek": 5
+    }
+  ],
+
+  "rooms": [
+    {
+      "id": "R101",
+      "capacity": 30
+    },
+    {
+      "id": "R102",
+      "capacity": 60
+    },
+    {
+      "id": "R103",
+      "capacity": 100
+    }
+  ]
+
+}

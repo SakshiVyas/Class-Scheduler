@@ -10,9 +10,7 @@ DB_USERNAME=root DB_PASSWORD=your_password ./mvnw spring-boot:run
 
 You can override `DB_URL` when MySQL uses another host or port. In DataGrip, add a MySQL data source for `localhost:3306`, database `class_scheduler`, using the same credentials.
 
-Import `students_test.csv` through `POST /api/data/students/import` as multipart field `file`. The supported columns are `student_id,student_name,group_id,course_ids`; separate multiple course IDs with semicolons. The converted algorithm input is available at `GET /api/data/constraints`.
-
-For a small side-by-side experiment, use `courses_comparison.csv`, `rooms_comparison.csv`, and `students_comparison.csv` in place of the scale fixtures, then call both algorithm URLs and compare room assignments and wasted seats.
+Import the four CSV files together through `POST /api/data/import`. The converted algorithm input is available at `GET /api/data/constraints`.
 
 Generate a schedule directly from MySQL data:
 
@@ -27,4 +25,4 @@ Backtracking is best-effort and bounded to 30 seconds (or one million search nod
 
 Open `http://localhost:8080/` for the browser UI. It provides student CSV upload and schedule generation controls.
 
-The application no longer loads `data/constraints.json` on startup. Both `/api/data/constraints` and `/api/schedules` read the current MySQL tables.
+Both `/api/data/constraints` and `/api/schedules` read the current MySQL tables.

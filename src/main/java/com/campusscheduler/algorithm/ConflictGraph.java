@@ -18,21 +18,15 @@ public class ConflictGraph {
             for (int j = i + 1; j < courses.size(); j++) {
                 Course first = courses.get(i), second = courses.get(j);
                 if (first.getProfessorId().equals(second.getProfessorId())
-                        || shareStudentGroup(first.getId(), second.getId(), studentGroups)) {
+                        || ScheduleValidator.shareStudentGroup(first, second, studentGroups)) {
                     addConflict(first.getId(), second.getId());
                 }
             }
         }
     }
 
-    public void buildGraph(ConstraintData data) { buildGraph(data.getClasses(), data.getStudentGroups()); }
-
-    private boolean shareStudentGroup(String first, String second, Map<String, List<String>> groups) {
-        if (groups == null) return false;
-        for (List<String> courses : groups.values()) {
-            if (courses != null && courses.contains(first) && courses.contains(second)) return true;
-        }
-        return false;
+    public void buildGraph(ConstraintData data) {
+        buildGraph(data.getClasses(), data.getStudentGroups());
     }
 
     public void addConflict(String first, String second) {
@@ -40,10 +34,11 @@ public class ConflictGraph {
         graph.get(second).add(first);
     }
 
-    public Set<String> getCourses() { return graph.keySet(); }
-    public Set<String> getConflicts(String courseId) { return graph.getOrDefault(courseId, new HashSet<>()); }
+    public Set<String> getCourses() {
+        return graph.keySet();
+    }
 
-    public void printGraph() {
-        for (String courseId : graph.keySet()) System.out.println(courseId + " -> " + graph.get(courseId));
+    public Set<String> getConflicts(String courseId) {
+        return graph.getOrDefault(courseId, Set.of());
     }
 }

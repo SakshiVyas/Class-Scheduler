@@ -8,14 +8,13 @@ import com.campusscheduler.model.ScheduleResult;
 import com.campusscheduler.model.TimeSlot;
 import com.campusscheduler.service.TimeSlotGenerator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DynamicProgrammingOptimizer {
-    private static final int INF = 1_000_000_000;
-
     public List<Course> sortCoursesBySize(List<Course> courses) {
         List<Course> sorted = new ArrayList<>(courses);
         sorted.sort(Comparator.comparingInt(Course::getEnrolledStudents));
@@ -28,39 +27,63 @@ public class DynamicProgrammingOptimizer {
         return sorted;
     }
 
-    public int[][] buildDPTable(List<Course> courses, List<Room> rooms) {
-        int[][] dp = new int[courses.size() + 1][rooms.size() + 1];
-        for (int j = 0; j <= rooms.size(); j++) dp[0][j] = 0;
-        for (int i = 1; i <= courses.size(); i++) dp[i][0] = INF;
-        for (int i = 1; i <= courses.size(); i++) {
-            for (int j = 1; j <= rooms.size(); j++) {
-                Course course = courses.get(i - 1);
-                Room room = rooms.get(j - 1);
-                dp[i][j] = dp[i][j - 1];
-                if (room.getCapacity() >= course.getEnrolledStudents() && dp[i - 1][j - 1] != INF) {
-                    dp[i][j] = Math.min(dp[i][j], dp[i - 1][j - 1] + room.getCapacity() - course.getEnrolledStudents());
-                }
-            }
-        }
-        return dp;
-    }
-
     public List<ScheduleEntry> optimizeRoomsForTimeSlot(List<Course> courses, List<Room> rooms, TimeSlot slot) {
         List<Course> sortedCourses = sortCoursesBySize(courses);
         List<Room> sortedRooms = sortRoomsByCapacity(rooms);
-        int[][] dp = buildDPTable(sortedCourses, sortedRooms);
-        if (dp[sortedCourses.size()][sortedRooms.size()] == INF) return new ArrayList<>();
-        List<ScheduleEntry> assignments = new ArrayList<>();
-        int i = sortedCourses.size(), j = sortedRooms.size();
-        while (i > 0 && j > 0) {
-            if (dp[i][j] == dp[i][j - 1]) { j--; continue; }
-            Course course = sortedCourses.get(i - 1);
-            Room room = sortedRooms.get(j - 1);
-            assignments.add(new ScheduleEntry(course, room, slot, room.getCapacity() - course.getEnrolledStudents()));
-            i--; j--;
+        int courseCount = sortedCourses.size();
+        int roomCount = sortedRooms.size();
+        int[][] assigned = new int[courseCount + 1][roomCount + 1];
+        int[][] waste = new int[courseCount + 1][roomCount + 1];
+        byte[][] action = new byte[courseCount + 1][roomCount + 1];
+
+        for (int i = 1; i <= courseCount; i++) {
+            for (int j = 1; j <= roomCount; j++) {
+                assigned[i][j] = assigned[i - 1][j];
+                waste[i][j] = waste[i - 1][j];
+                action[i][j] = 1;
+
+                if (better(assigned[i][j - 1], waste[i][j - 1], assigned[i][j], waste[i][j])) {
+                    assigned[i][j] = assigned[i][j - 1];
+                    waste[i][j] = waste[i][j - 1];
+                    action[i][j] = 2;
+                }
+
+                Course course = sortedCourses.get(i - 1);
+                Room room = sortedRooms.get(j - 1);
+                if (room.getCapacity() >= course.getEnrolledStudents()) {
+                    int assignedWithRoom = assigned[i - 1][j - 1] + 1;
+                    int wasteWithRoom = waste[i - 1][j - 1] + room.getCapacity() - course.getEnrolledStudents();
+                    if (better(assignedWithRoom, wasteWithRoom, assigned[i][j], waste[i][j])) {
+                        assigned[i][j] = assignedWithRoom;
+                        waste[i][j] = wasteWithRoom;
+                        action[i][j] = 3;
+                    }
+                }
+            }
         }
-        Collections.reverse(assignments);
+
+        List<ScheduleEntry> assignments = new ArrayList<>();
+        int i = courseCount;
+        int j = roomCount;
+        while (i > 0 && j > 0) {
+            if (action[i][j] == 1) {
+                i--;
+            } else if (action[i][j] == 2) {
+                j--;
+            } else {
+                Course course = sortedCourses.get(i - 1);
+                Room room = sortedRooms.get(j - 1);
+                assignments.add(new ScheduleEntry(course, room, slot,
+                        room.getCapacity() - course.getEnrolledStudents()));
+                i--;
+                j--;
+            }
+        }
         return assignments;
+    }
+
+    private boolean better(int candidateCount, int candidateWaste, int currentCount, int currentWaste) {
+        return candidateCount > currentCount || candidateCount == currentCount && candidateWaste < currentWaste;
     }
 
     public ScheduleResult optimizeSchedule(ConstraintData data, Map<String, TimeSlot> assignments) {
@@ -73,8 +96,14 @@ public class DynamicProgrammingOptimizer {
             }
             if (coursesForSlot.isEmpty()) continue;
             List<ScheduleEntry> entries = optimizeRoomsForTimeSlot(coursesForSlot, data.getRooms(), slot);
-            if (entries.isEmpty()) for (Course course : coursesForSlot) result.addUnscheduledCourse(course);
-            else for (ScheduleEntry entry : entries) result.addScheduledEntry(entry);
+            Set<String> scheduledIds = new HashSet<>();
+            for (ScheduleEntry entry : entries) {
+                result.addScheduledEntry(entry);
+                scheduledIds.add(entry.getCourse().getId());
+            }
+            for (Course course : coursesForSlot) {
+                if (!scheduledIds.contains(course.getId())) result.addUnscheduledCourse(course);
+            }
         }
         for (Course course : data.getClasses()) if (!assignments.containsKey(course.getId())) result.addUnscheduledCourse(course);
         return result;

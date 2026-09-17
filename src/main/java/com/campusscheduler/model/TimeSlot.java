@@ -3,13 +3,12 @@ package com.campusscheduler.model;
 public class TimeSlot {
     private String id;
     private String day;
-    private String startTime ;
+    private String startTime;
 
-    public TimeSlot(){
-
+    public TimeSlot() {
     }
 
-    public TimeSlot(String id, String day, String startTime){
+    public TimeSlot(String id, String day, String startTime) {
         this.id = id;
         this.day = day;
         this.startTime = startTime;

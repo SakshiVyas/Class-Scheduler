@@ -1,16 +1,15 @@
 package com.campusscheduler.model;
 
 public class Course {
-
     private String id;
     private int enrolledStudents;
     private String professorId;
     private String name;
 
-    public Course(){
-
+    public Course() {
     }
-    public Course( String id, int enrolledStudents, String professorId){
+
+    public Course(String id, int enrolledStudents, String professorId) {
         this.id = id;
         this.enrolledStudents = enrolledStudents;
         this.professorId = professorId;
@@ -52,5 +51,4 @@ public class Course {
     public void setName(String name) {
         this.name = name;
     }
-
 }

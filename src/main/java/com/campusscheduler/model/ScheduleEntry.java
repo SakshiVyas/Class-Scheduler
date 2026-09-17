@@ -1,29 +1,20 @@
 package com.campusscheduler.model;
 
 public class ScheduleEntry {
-
     private Course course;
     private Room room;
     private TimeSlot timeSlot;
     private int wastedSeats;
 
-
     public ScheduleEntry() {
     }
 
-
-    public ScheduleEntry(
-            Course course,
-            Room room,
-            TimeSlot timeSlot,
-            int wastedSeats
-    ) {
+    public ScheduleEntry(Course course, Room room, TimeSlot timeSlot, int wastedSeats) {
         this.course = course;
         this.room = room;
         this.timeSlot = timeSlot;
         this.wastedSeats = wastedSeats;
     }
-
 
     public Course getCourse() {
         return course;
@@ -33,7 +24,6 @@ public class ScheduleEntry {
         this.course = course;
     }
 
-
     public Room getRoom() {
         return room;
     }
@@ -42,7 +32,6 @@ public class ScheduleEntry {
         this.room = room;
     }
 
-
     public TimeSlot getTimeSlot() {
         return timeSlot;
     }
@@ -50,7 +39,6 @@ public class ScheduleEntry {
     public void setTimeSlot(TimeSlot timeSlot) {
         this.timeSlot = timeSlot;
     }
-
 
     public int getWastedSeats() {
         return wastedSeats;

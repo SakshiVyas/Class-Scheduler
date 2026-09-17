@@ -1,6 +1,0 @@
-student_id,student_name,group_id,course_ids
-S001,Student 001,GROUP_1,C_SMALL;C_MEDIUM
-S002,Student 002,GROUP_1,C_SMALL;C_MEDIUM
-S003,Student 003,GROUP_2,C_LARGE;C_GROUP_A
-S004,Student 004,GROUP_2,C_LARGE;C_GROUP_A
-S005,Student 005,GROUP_3,C_GROUP_B

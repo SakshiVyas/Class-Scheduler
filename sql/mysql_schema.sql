@@ -23,7 +23,15 @@ CREATE TABLE IF NOT EXISTS rooms (
   capacity INT NOT NULL
 );
 
-SELECT COUNT(*) FROM professors; -- 300
-SELECT COUNT(*) FROM courses;    -- 300
-SELECT COUNT(*) FROM rooms;      -- 50
-SELECT COUNT(*) FROM students;   -- after CSV import
+CREATE TABLE IF NOT EXISTS schedule_settings (
+  id INT PRIMARY KEY,
+  working_days VARCHAR(255) NOT NULL,
+  day_start_time VARCHAR(5) NOT NULL,
+  day_end_time VARCHAR(5) NOT NULL,
+  slot_minutes INT NOT NULL
+);
+
+SELECT COUNT(*) FROM professors;
+SELECT COUNT(*) FROM courses;
+SELECT COUNT(*) FROM rooms;
+SELECT COUNT(*) FROM students;

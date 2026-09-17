@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class WelshPowellSolver {
     public List<String> sortCoursesByDegree(ConflictGraph graph) {
@@ -29,9 +30,26 @@ public class WelshPowellSolver {
     }
 
     public Map<String, TimeSlot> assignTimeSlots(ConflictGraph graph, List<TimeSlot> timeSlots) {
+        return assignTimeSlots(graph, timeSlots, Integer.MAX_VALUE);
+    }
+
+    public Map<String, TimeSlot> assignTimeSlots(ConflictGraph graph, List<TimeSlot> timeSlots,
+                                                  int maximumCoursesPerSlot) {
         Map<String, TimeSlot> assignments = new HashMap<>();
+        Map<Integer, List<String>> coursesByColor = new TreeMap<>();
         for (Map.Entry<String, Integer> entry : colorGraph(graph).entrySet()) {
-            if (entry.getValue() < timeSlots.size()) assignments.put(entry.getKey(), timeSlots.get(entry.getValue()));
+            coursesByColor.computeIfAbsent(entry.getValue(), ignored -> new ArrayList<>()).add(entry.getKey());
+        }
+        int slotIndex = 0;
+        int slotCapacity = Math.max(1, maximumCoursesPerSlot);
+        for (List<String> courses : coursesByColor.values()) {
+            courses.sort(String::compareTo);
+            int slotsRequired = (courses.size() + slotCapacity - 1) / slotCapacity;
+            for (int i = 0; i < courses.size(); i++) {
+                int assignedSlot = slotIndex + i % slotsRequired;
+                if (assignedSlot < timeSlots.size()) assignments.put(courses.get(i), timeSlots.get(assignedSlot));
+            }
+            slotIndex += slotsRequired;
         }
         return assignments;
     }

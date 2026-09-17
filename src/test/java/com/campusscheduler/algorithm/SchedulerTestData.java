@@ -29,11 +29,15 @@ final class SchedulerTestData {
         String day = slots.isEmpty() ? "Monday" : slots.get(0).getDay();
         String start = slots.isEmpty() ? "09:00" : slots.get(0).getStartTime();
         int firstHour = Integer.parseInt(start.substring(0, 2));
-        int lastHour = slots.isEmpty() ? firstHour + 1 : Integer.parseInt(slots.get(slots.size() - 1).getStartTime().substring(0, 2)) + 1;
+        int slotHours = slots.size() > 1
+                ? Integer.parseInt(slots.get(1).getStartTime().substring(0, 2)) - firstHour
+                : 1;
+        int lastHour = slots.isEmpty() ? firstHour + slotHours
+                : Integer.parseInt(slots.get(slots.size() - 1).getStartTime().substring(0, 2)) + slotHours;
         settings.setWorkingDays(List.of(day));
         settings.setDayStartTime(String.format("%02d:00", firstHour));
         settings.setDayEndTime(String.format("%02d:00", lastHour));
-        settings.setSlotMinutes(60);
+        settings.setSlotMinutes(slotHours * 60);
         data.setScheduleSettings(settings);
         data.setStudentGroups(groups);
         return data;

@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.1</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>com.campusscheduler</groupId>
 	<artifactId>Backend</artifactId>
@@ -72,6 +72,26 @@
 	</dependencies>
 
 	<build>
+		<finalName>class-scheduler</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>data</directory>
+				<targetPath>demo</targetPath>
+				<includes>
+					<include>*_test.csv</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>sql</directory>
+				<targetPath>sql</targetPath>
+				<includes>
+					<include>*.sql</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

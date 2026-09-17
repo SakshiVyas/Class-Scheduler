@@ -10,6 +10,7 @@ import com.campusscheduler.persistence.StudentEntity;
 import com.campusscheduler.persistence.StudentRepository;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -38,6 +40,23 @@ public class DatasetCsvImportService {
     @Transactional
     public ImportSummary importDataset(MultipartFile professorFile, MultipartFile courseFile,
                                        MultipartFile roomFile, MultipartFile studentFile) throws IOException {
+        requireFile(professorFile, "professors");
+        requireFile(courseFile, "courses");
+        requireFile(roomFile, "rooms");
+        requireFile(studentFile, "students");
+        return importDataset(professorFile.getInputStream(), courseFile.getInputStream(),
+                roomFile.getInputStream(), studentFile.getInputStream());
+    }
+
+    @Transactional
+    public ImportSummary importDataset(Resource professorFile, Resource courseFile,
+                                       Resource roomFile, Resource studentFile) throws IOException {
+        return importDataset(professorFile.getInputStream(), courseFile.getInputStream(),
+                roomFile.getInputStream(), studentFile.getInputStream());
+    }
+
+    private ImportSummary importDataset(InputStream professorFile, InputStream courseFile,
+                                        InputStream roomFile, InputStream studentFile) throws IOException {
         List<ProfessorEntity> professorRows = parseProfessors(professorFile);
         List<CourseEntity> courseRows = parseCourses(courseFile);
         List<RoomEntity> roomRows = parseRooms(roomFile);
@@ -55,13 +74,13 @@ public class DatasetCsvImportService {
         return new ImportSummary(professorRows.size(), courseRows.size(), roomRows.size(), studentRows.size());
     }
 
-    private List<ProfessorEntity> parseProfessors(MultipartFile file) throws IOException {
+    private List<ProfessorEntity> parseProfessors(InputStream file) throws IOException {
         List<ProfessorEntity> result = new ArrayList<>();
         for (String[] row : rows(file, "professors", 2)) result.add(new ProfessorEntity(value(row, 0), value(row, 1)));
         return result;
     }
 
-    private List<CourseEntity> parseCourses(MultipartFile file) throws IOException {
+    private List<CourseEntity> parseCourses(InputStream file) throws IOException {
         List<CourseEntity> result = new ArrayList<>();
         for (String[] row : rows(file, "courses", 4)) {
             result.add(new CourseEntity(value(row, 0), value(row, 1), value(row, 2), positiveInteger(row, 3, "enrolled_students")));
@@ -69,13 +88,13 @@ public class DatasetCsvImportService {
         return result;
     }
 
-    private List<RoomEntity> parseRooms(MultipartFile file) throws IOException {
+    private List<RoomEntity> parseRooms(InputStream file) throws IOException {
         List<RoomEntity> result = new ArrayList<>();
         for (String[] row : rows(file, "rooms", 2)) result.add(new RoomEntity(value(row, 0), positiveInteger(row, 1, "capacity")));
         return result;
     }
 
-    private List<StudentEntity> parseStudents(MultipartFile file) throws IOException {
+    private List<StudentEntity> parseStudents(InputStream file) throws IOException {
         List<StudentEntity> result = new ArrayList<>();
         for (String[] row : rows(file, "students", 4)) {
             result.add(new StudentEntity(value(row, 0), value(row, 1), value(row, 2), value(row, 3)));
@@ -83,10 +102,9 @@ public class DatasetCsvImportService {
         return result;
     }
 
-    private List<String[]> rows(MultipartFile file, String label, int columns) throws IOException {
-        if (file == null || file.isEmpty()) throw new IllegalArgumentException("Choose a " + label + " CSV file.");
+    private List<String[]> rows(InputStream file, String label, int columns) throws IOException {
         List<String[]> result = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file, StandardCharsets.UTF_8))) {
             reader.readLine();
             String line;
             int lineNumber = 1;
@@ -101,6 +119,12 @@ public class DatasetCsvImportService {
         }
         if (result.isEmpty()) throw new IllegalArgumentException(label + " CSV contains no data rows.");
         return result;
+    }
+
+    private void requireFile(MultipartFile file, String label) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Choose a " + label + " CSV file.");
+        }
     }
 
     private String value(String[] row, int index) {

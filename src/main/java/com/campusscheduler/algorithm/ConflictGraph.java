@@ -1,7 +1,7 @@
 package com.campusscheduler.algorithm;
 
-import com.campusscheduler.model.ClassOccurrence;
-
+import com.campusscheduler.model.ConstraintData;
+import com.campusscheduler.model.Course;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,131 +9,41 @@ import java.util.Map;
 import java.util.Set;
 
 public class ConflictGraph {
-
     private final Map<String, Set<String>> graph = new HashMap<>();
 
-
-    public void addOccurrence(
-            ClassOccurrence occurrence
-    ) {
-        graph.putIfAbsent(
-                occurrence.getId(),
-                new HashSet<>()
-        );
-    }
-
-
-    public void addConflict(
-            String firstOccurrenceId,
-            String secondOccurrenceId
-    ) {
-        graph.get(firstOccurrenceId).add(secondOccurrenceId);
-
-        graph.get(secondOccurrenceId).add(firstOccurrenceId);
-    }
-
-
-    private boolean haveSameProfessor(
-            ClassOccurrence first,
-            ClassOccurrence second
-    ) {
-        String firstProfessor =
-                first.getCourse().getProfessorId();
-
-        String secondProfessor =
-                second.getCourse().getProfessorId();
-
-        return firstProfessor.equals(secondProfessor);
-    }
-
-
-    private boolean shareStudentGroup(
-            ClassOccurrence first,
-            ClassOccurrence second
-    ) {
-        List<String> firstGroups =
-                first.getCourse().getStudentGroups();
-
-        List<String> secondGroups =
-                second.getCourse().getStudentGroups();
-
-        if (firstGroups == null || secondGroups == null) {
-            return false;
-        }
-
-        for (String group : firstGroups) {
-
-            if (secondGroups.contains(group)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    public void buildGraph(
-            List<ClassOccurrence> occurrences
-    ) {
-
+    public void buildGraph(List<Course> courses, Map<String, List<String>> studentGroups) {
         graph.clear();
-
-        for (ClassOccurrence occurrence : occurrences) {
-            addOccurrence(occurrence);
-        }
-
-        for (int i = 0;
-             i < occurrences.size();
-             i++) {
-
-            for (int j = i + 1;
-                 j < occurrences.size();
-                 j++) {
-
-                ClassOccurrence first =
-                        occurrences.get(i);
-
-                ClassOccurrence second =
-                        occurrences.get(j);
-
-                if (haveSameProfessor(first, second)
-                        ||
-                        shareStudentGroup(first, second)) {
-
-                    addConflict(
-                            first.getId(),
-                            second.getId()
-                    );
+        for (Course course : courses) graph.putIfAbsent(course.getId(), new HashSet<>());
+        for (int i = 0; i < courses.size(); i++) {
+            for (int j = i + 1; j < courses.size(); j++) {
+                Course first = courses.get(i), second = courses.get(j);
+                if (first.getProfessorId().equals(second.getProfessorId())
+                        || shareStudentGroup(first.getId(), second.getId(), studentGroups)) {
+                    addConflict(first.getId(), second.getId());
                 }
             }
         }
     }
 
+    public void buildGraph(ConstraintData data) { buildGraph(data.getClasses(), data.getStudentGroups()); }
 
-    public Set<String> getOccurrences() {
-        return graph.keySet();
+    private boolean shareStudentGroup(String first, String second, Map<String, List<String>> groups) {
+        if (groups == null) return false;
+        for (List<String> courses : groups.values()) {
+            if (courses != null && courses.contains(first) && courses.contains(second)) return true;
+        }
+        return false;
     }
 
-
-    public Set<String> getConflicts(
-            String occurrenceId
-    ) {
-        return graph.getOrDefault(
-                occurrenceId,
-                new HashSet<>()
-        );
+    public void addConflict(String first, String second) {
+        graph.get(first).add(second);
+        graph.get(second).add(first);
     }
 
+    public Set<String> getCourses() { return graph.keySet(); }
+    public Set<String> getConflicts(String courseId) { return graph.getOrDefault(courseId, new HashSet<>()); }
 
     public void printGraph() {
-
-        for (String occurrenceId : graph.keySet()) {
-
-            System.out.println(
-                    occurrenceId
-                            + " -> "
-                            + graph.get(occurrenceId)
-            );
-        }
+        for (String courseId : graph.keySet()) System.out.println(courseId + " -> " + graph.get(courseId));
     }
 }

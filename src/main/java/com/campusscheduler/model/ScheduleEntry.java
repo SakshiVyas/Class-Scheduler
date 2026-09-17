@@ -2,7 +2,7 @@ package com.campusscheduler.model;
 
 public class ScheduleEntry {
 
-    private ClassOccurrence classOccurrence;
+    private Course course;
     private Room room;
     private TimeSlot timeSlot;
     private int wastedSeats;
@@ -13,24 +13,24 @@ public class ScheduleEntry {
 
 
     public ScheduleEntry(
-            ClassOccurrence classOccurrence,
+            Course course,
             Room room,
             TimeSlot timeSlot,
             int wastedSeats
     ) {
-        this.classOccurrence = classOccurrence;
+        this.course = course;
         this.room = room;
         this.timeSlot = timeSlot;
         this.wastedSeats = wastedSeats;
     }
 
 
-    public ClassOccurrence getClassOccurrence() {
-        return classOccurrence;
+    public Course getCourse() {
+        return course;
     }
 
-    public void setClassOccurrence(ClassOccurrence classOccurrence) {
-        this.classOccurrence = classOccurrence;
+    public void setCourse(Course course) {
+        this.course = course;
     }
 
 

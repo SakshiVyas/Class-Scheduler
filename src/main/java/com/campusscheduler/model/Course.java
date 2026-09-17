@@ -1,16 +1,11 @@
 package com.campusscheduler.model;
 
-import java.util.List;
-
 public class Course {
 
     private String id;
     private int enrolledStudents;
     private String professorId;
     private String name;
-    private List<String> studentGroups;
-    private int durationMinutes;
-    private int classesPerWeek;
 
     public Course(){
 
@@ -53,26 +48,4 @@ public class Course {
         this.name = name;
     }
 
-    public List<String> getStudentGroups() {
-        return studentGroups;
-    }
-
-    public void setStudentGroups(List<String> studentGroups) {
-        this.studentGroups = studentGroups;
-    }
-
-    public int getDurationMinutes() {
-        return durationMinutes;
-    }
-
-    public void setDurationMinutes(int durationMinutes) {
-        this.durationMinutes = durationMinutes;
-    }
-    public int getClassesPerWeek() {
-        return classesPerWeek;
-    }
-
-    public void setClassesPerWeek(int classesPerWeek) {
-        this.classesPerWeek = classesPerWeek;
-    }
 }

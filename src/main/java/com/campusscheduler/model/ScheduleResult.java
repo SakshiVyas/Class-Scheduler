@@ -6,13 +6,13 @@ import java.util.List;
 public class ScheduleResult {
 
     private List<ScheduleEntry> scheduledEntries;
-    private List<ClassOccurrence> unscheduledOccurrences;
+    private List<Course> unscheduledCourses;
     private int totalWastedSeats;
 
 
     public ScheduleResult() {
         this.scheduledEntries = new ArrayList<>();
-        this.unscheduledOccurrences = new ArrayList<>();
+        this.unscheduledCourses = new ArrayList<>();
         this.totalWastedSeats = 0;
     }
 
@@ -28,14 +28,12 @@ public class ScheduleResult {
     }
 
 
-    public List<ClassOccurrence> getUnscheduledOccurrences() {
-        return unscheduledOccurrences;
+    public List<Course> getUnscheduledCourses() {
+        return unscheduledCourses;
     }
 
-    public void setUnscheduledOccurrences(
-            List<ClassOccurrence> unscheduledOccurrences
-    ) {
-        this.unscheduledOccurrences = unscheduledOccurrences;
+    public void setUnscheduledCourses(List<Course> unscheduledCourses) {
+        this.unscheduledCourses = unscheduledCourses;
     }
 
 
@@ -58,9 +56,7 @@ public class ScheduleResult {
     }
 
 
-    public void addUnscheduledOccurrence(
-            ClassOccurrence occurrence
-    ) {
-        unscheduledOccurrences.add(occurrence);
+    public void addUnscheduledCourse(Course course) {
+        unscheduledCourses.add(course);
     }
 }

@@ -1,253 +1,60 @@
 package com.campusscheduler.algorithm;
 
-import com.campusscheduler.model.*;
-import com.campusscheduler.service.ClassOccurrenceGenerator;
-import com.campusscheduler.service.TimeOverlapChecker;
+import com.campusscheduler.model.ConstraintData;
+import com.campusscheduler.model.Course;
+import com.campusscheduler.model.Room;
+import com.campusscheduler.model.ScheduleEntry;
+import com.campusscheduler.model.ScheduleResult;
+import com.campusscheduler.model.TimeSlot;
 import com.campusscheduler.service.TimeSlotGenerator;
-import com.campusscheduler.service.ScheduleTimeValidator;
-
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 public class GreedySolver {
-
-
-    private final TimeOverlapChecker timeOverlapChecker =
-            new TimeOverlapChecker();
-
-    private final ScheduleTimeValidator scheduleTimeValidator =
-            new ScheduleTimeValidator();
-
-// first sort the courses in desc
-public List<ClassOccurrence> sortOccurrencesBySize(
-        List<ClassOccurrence> occurrences
-) {
-    List<ClassOccurrence> sortedOccurrences =
-            new ArrayList<>(occurrences);
-
-    sortedOccurrences.sort(
-            Comparator.comparingInt(
-                    (ClassOccurrence occurrence) ->
-                            occurrence.getCourse()
-                                    .getEnrolledStudents()
-            ).reversed()
-    );
-
-    return sortedOccurrences;
-}
-
-    // whether room has enough capacity for this course
-    private boolean hasEnoughCapacity(
-            ClassOccurrence occurrence,
-            Room room
-    ) {
-        return room.getCapacity()
-                >= occurrence.getCourse()
-                .getEnrolledStudents();
+    public List<Course> sortCoursesBySize(List<Course> courses) {
+        List<Course> sorted = new ArrayList<>(courses);
+        sorted.sort(Comparator.comparingInt(Course::getEnrolledStudents).reversed());
+        return sorted;
     }
-    // check whether room is allocated already
-    private boolean isRoomBusy(
-            Room room,
-            TimeSlot timeSlot,
-            ClassOccurrence occurrence,
-            List<ScheduleEntry> schedule
-    ) {
 
-        for (ScheduleEntry entry : schedule) {
-
-            boolean sameRoom =
-                    entry.getRoom()
-                            .getId()
-                            .equals(room.getId());
-
-            boolean overlaps =
-                    timeOverlapChecker.overlaps(
-                            occurrence,
-                            timeSlot,
-                            entry.getClassOccurrence(),
-                            entry.getTimeSlot()
-                    );
-
-            if (sameRoom && overlaps) {
-                return true;
-            }
+    private boolean sharesGroup(Course first, Course second, Map<String, List<String>> groups) {
+        if (groups == null) return false;
+        for (List<String> courses : groups.values()) {
+            if (courses != null && courses.contains(first.getId()) && courses.contains(second.getId())) return true;
         }
-
         return false;
     }
-    // checking if professor is busy
-    private boolean isProfessorBusy(
-            ClassOccurrence occurrence,
-            TimeSlot timeSlot,
-            List<ScheduleEntry> schedule
-    ) {
 
-        String professorId =
-                occurrence.getCourse()
-                        .getProfessorId();
-
+    private boolean valid(Course course, Room room, TimeSlot slot, List<ScheduleEntry> schedule, Map<String, List<String>> groups) {
+        if (room.getCapacity() < course.getEnrolledStudents()) return false;
         for (ScheduleEntry entry : schedule) {
-
-            String scheduledProfessorId =
-                    entry.getClassOccurrence()
-                            .getCourse()
-                            .getProfessorId();
-
-            boolean sameProfessor =
-                    professorId.equals(
-                            scheduledProfessorId
-                    );
-
-            boolean overlaps =
-                    timeOverlapChecker.overlaps(
-                            occurrence,
-                            timeSlot,
-                            entry.getClassOccurrence(),
-                            entry.getTimeSlot()
-                    );
-
-            if (sameProfessor && overlaps) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-        // checking students belong to same groups --- have same courses
-        private boolean shareStudentGroup(
-                ClassOccurrence first,
-                ClassOccurrence second
-        ) {
-            List<String> firstGroups =
-                    first.getCourse().getStudentGroups();
-
-            List<String> secondGroups =
-                    second.getCourse().getStudentGroups();
-
-            if (firstGroups == null || secondGroups == null) {
-                return false;
-            }
-
-            for (String group : firstGroups) {
-
-                if (secondGroups.contains(group)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        // conflict happens at the same time
-        private boolean hasStudentGroupConflict(
-                ClassOccurrence classOccurrence,
-                TimeSlot timeSlot,
-                List<ScheduleEntry> currentSchedule
-        ) {
-
-            for (ScheduleEntry entry : currentSchedule) {
-
-                boolean sharesGroup =
-                        shareStudentGroup(
-                                classOccurrence,
-                                entry.getClassOccurrence()
-                        );
-
-                boolean overlaps =
-                        timeOverlapChecker.overlaps(
-                                classOccurrence,
-                                timeSlot,
-                                entry.getClassOccurrence(),
-                                entry.getTimeSlot()
-                        );
-
-                if (sharesGroup && overlaps) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-    // checking if all conditions are valid
-    private boolean isValidAssignment(
-            ClassOccurrence classOccurrence,
-            Room room,
-            TimeSlot timeSlot,
-            List<ScheduleEntry> currentSchedule,
-            ScheduleSettings settings
-    ){
-        if(!hasEnoughCapacity(classOccurrence,room)){
-            return false;
-        }
-        if(isRoomBusy(
-                room,
-                timeSlot,
-                classOccurrence,
-                currentSchedule
-        )){
-            return false;
-        }
-        if(isProfessorBusy(classOccurrence, timeSlot, currentSchedule)){
-            return false;
-        }
-        if(hasStudentGroupConflict(classOccurrence, timeSlot, currentSchedule)){
-            return false;
-        }
-        if (!scheduleTimeValidator.fitsWithinWorkingHours(
-                classOccurrence,
-                timeSlot,
-                settings
-        )) {
-            return false;
+            if (!entry.getTimeSlot().getId().equals(slot.getId())) continue;
+            if (entry.getRoom().getId().equals(room.getId())) return false;
+            if (entry.getCourse().getProfessorId().equals(course.getProfessorId())) return false;
+            if (sharesGroup(entry.getCourse(), course, groups)) return false;
         }
         return true;
     }
 
-
-    public ScheduleResult solve(ConstraintData data){
-
-        TimeSlotGenerator timeSlotGenerator =
-                new TimeSlotGenerator();
-
-        List<TimeSlot> timeSlots =
-                timeSlotGenerator.generate(
-                        data.getScheduleSettings()
-                );
+    public ScheduleResult solve(ConstraintData data) {
         ScheduleResult result = new ScheduleResult();
-        ClassOccurrenceGenerator generator = new ClassOccurrenceGenerator();
-        List<ClassOccurrence> classOccurrences = generator.generate(data.getClasses());
-
-        List<ClassOccurrence> sortedOccurrences =
-                sortOccurrencesBySize(classOccurrences);
-        for(ClassOccurrence classOccurrence : sortedOccurrences){
+        for (Course course : sortCoursesBySize(data.getClasses())) {
             boolean assigned = false;
-           // System.out.println("Trying to schedule:" + course.getId());
-            for(TimeSlot timeSlot : timeSlots){
-                //System.out.println("Trying timeSlot:" +timeSlot.getId());
-                for(Room room : data.getRooms()){
-                    boolean valid = isValidAssignment(classOccurrence,room,timeSlot,result.getScheduledEntries(),data.getScheduleSettings());
-                    //System.out.println("Room:" + room.getId() + "| Valid:" + valid);
-                    if (valid) {
-                        int wastedSeats =
-                                room.getCapacity() - classOccurrence.getCourse().getEnrolledStudents();
-                        ScheduleEntry entry = new ScheduleEntry(
-                                        classOccurrence, room, timeSlot, wastedSeats);
-                        result.addScheduledEntry(entry);
+            for (TimeSlot slot : new TimeSlotGenerator().generate(data.getScheduleSettings())) {
+                List<Room> rooms = new ArrayList<>(data.getRooms());
+                rooms.sort(Comparator.comparingInt(Room::getCapacity));
+                for (Room room : rooms) {
+                    if (valid(course, room, slot, result.getScheduledEntries(), data.getStudentGroups())) {
+                        result.addScheduledEntry(new ScheduleEntry(course, room, slot, room.getCapacity() - course.getEnrolledStudents()));
                         assigned = true;
                         break;
-                       // System.out.println("    SCHEDULED in " + room.getId() + " at " + timeSlot.getId());
                     }
                 }
-                if(assigned){
-                    break;
-                }
+                if (assigned) break;
             }
-            if (!assigned) {
-                result.addUnscheduledOccurrence(classOccurrence);
-            }
+            if (!assigned) result.addUnscheduledCourse(course);
         }
         return result;
     }

@@ -1,262 +1,46 @@
 package com.campusscheduler.demo;
 
-import com.campusscheduler.algorithm.*;
-import com.campusscheduler.model.*;
-import com.campusscheduler.service.ClassOccurrenceGenerator;
+import com.campusscheduler.algorithm.BacktrackingSolver;
+import com.campusscheduler.algorithm.ConflictGraph;
+import com.campusscheduler.algorithm.DynamicProgrammingOptimizer;
+import com.campusscheduler.algorithm.GreedySolver;
+import com.campusscheduler.algorithm.WelshPowellSolver;
+import com.campusscheduler.model.ConstraintData;
+import com.campusscheduler.model.Course;
+import com.campusscheduler.model.ScheduleEntry;
+import com.campusscheduler.model.ScheduleResult;
+import com.campusscheduler.model.TimeSlot;
 import com.campusscheduler.service.TimeSlotGenerator;
-
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 public class AlgorithmDemo {
-   // greedy
-
-    public void runGreedyDemo(
-            ConstraintData data
-    ) {
-        GreedySolver solver =
-                new GreedySolver();
-
-        ScheduleResult result =
-                solver.solve(data);
-
-
-        System.out.println();
-        System.out.println("===== GREEDY SCHEDULE =====");
-
-
-        for (ScheduleEntry entry :
-                result.getScheduledEntries()) {
-
-            System.out.println(
-                    entry.getClassOccurrence().getId()
-                            + " | "
-                            + entry.getTimeSlot().getDay()
-                            + " "
-                            + entry.getTimeSlot().getStartTime()
-                            + " | Room: "
-                            + entry.getRoom().getId()
-                            + " | Waste: "
-                            + entry.getWastedSeats()
-            );
+    private void printResult(String title, ScheduleResult result) {
+        System.out.println("\n===== " + title + " =====");
+        for (ScheduleEntry entry : result.getScheduledEntries()) {
+            System.out.println(entry.getCourse().getId() + " | " + entry.getTimeSlot().getDay()
+                    + " " + entry.getTimeSlot().getStartTime() + " | Room: "
+                    + entry.getRoom().getId() + " | Waste: " + entry.getWastedSeats());
         }
-
-
-        System.out.println();
         System.out.println("Unscheduled:");
-
-        for (ClassOccurrence occurrence :
-                result.getUnscheduledOccurrences()) {
-
-            System.out.println(
-                    occurrence.getId()
-            );
-        }
-
-
-        System.out.println(
-                "Total wasted seats: "
-                        + result.getTotalWastedSeats()
-        );
+        for (Course course : result.getUnscheduledCourses()) System.out.println(course.getId());
+        System.out.println("Total wasted seats: " + result.getTotalWastedSeats());
     }
 
-    // graphcoloring
-
-    public Map<String, TimeSlot> runGraphColoringDemo(
-            ConstraintData data
-    ) {
-        ClassOccurrenceGenerator generator =
-                new ClassOccurrenceGenerator();
-
-        List<ClassOccurrence> occurrences =
-                generator.generate(data.getClasses());
-
-        TimeSlotGenerator timeSlotGenerator =
-                new TimeSlotGenerator();
-
-        List<TimeSlot> timeSlots =
-                timeSlotGenerator.generate(
-                        data.getScheduleSettings()
-                );
-        ConflictGraph graph =
-                new ConflictGraph();
-
-        graph.buildGraph(occurrences);
-
-
-        System.out.println();
-        System.out.println("===== CONFLICT GRAPH =====");
-
+    public void runAllDemos(ConstraintData data) {
+        printResult("GREEDY SCHEDULE", new GreedySolver().solve(data));
+        ConflictGraph graph = new ConflictGraph();
+        graph.buildGraph(data);
+        System.out.println("\n===== CONFLICT GRAPH =====");
         graph.printGraph();
-
-
-        WelshPowellSolver solver =
-                new WelshPowellSolver();
-
-        Map<String, TimeSlot> assignments =
-                solver.assignTimeSlots(
-                        graph,
-                        occurrences,
-                        timeSlots,
-                        data.getScheduleSettings()
-                );
-
-        System.out.println();
-        System.out.println("===== WELSH-POWELL =====");
-
-        for (ClassOccurrence occurrence : occurrences) {
-
-            TimeSlot timeSlot =
-                    assignments.get(
-                            occurrence.getId()
-                    );
-
-            if (timeSlot != null) {
-
-                System.out.println(
-                        occurrence.getId()
-                                + " -> "
-                                + timeSlot.getDay()
-                                + " "
-                                + timeSlot.getStartTime()
-                );
-
-            } else {
-
-                System.out.println(
-                        occurrence.getId()
-                                + " -> UNSCHEDULED"
-                );
-            }
+        List<TimeSlot> slots = new TimeSlotGenerator().generate(data.getScheduleSettings());
+        Map<String, TimeSlot> assignments = new WelshPowellSolver().assignTimeSlots(graph, slots);
+        System.out.println("\n===== WELSH-POWELL =====");
+        for (Course course : data.getClasses()) {
+            TimeSlot slot = assignments.get(course.getId());
+            System.out.println(course.getId() + " -> " + (slot == null ? "UNSCHEDULED" : slot.getDay() + " " + slot.getStartTime()));
         }
-
-        return assignments;
+        printResult("DYNAMIC PROGRAMMING", new DynamicProgrammingOptimizer().optimizeSchedule(data, assignments));
+        printResult("BACKTRACKING", new BacktrackingSolver().solve(data));
     }
-
-
-     // DP
-     public void runDynamicProgrammingDemo(
-             ConstraintData data,
-             Map<String, TimeSlot> timeAssignments
-     ) {
-         DynamicProgrammingOptimizer optimizer =
-                 new DynamicProgrammingOptimizer();
-
-         ScheduleResult result =
-                 optimizer.optimizeSchedule(
-                         data,
-                         timeAssignments
-                 );
-
-
-         System.out.println();
-         System.out.println(
-                 "===== DYNAMIC PROGRAMMING ====="
-         );
-
-
-         for (ScheduleEntry entry :
-                 result.getScheduledEntries()) {
-
-             System.out.println(
-                     entry.getClassOccurrence().getId()
-                             + " | "
-                             + entry.getTimeSlot().getDay()
-                             + " "
-                             + entry.getTimeSlot().getStartTime()
-                             + " | Room: "
-                             + entry.getRoom().getId()
-                             + " | Waste: "
-                             + entry.getWastedSeats()
-             );
-         }
-
-
-         System.out.println();
-         System.out.println("Unscheduled:");
-
-         for (ClassOccurrence occurrence :
-                 result.getUnscheduledOccurrences()) {
-
-             System.out.println(
-                     occurrence.getId()
-             );
-         }
-
-
-         System.out.println(
-                 "Total wasted seats: "
-                         + result.getTotalWastedSeats()
-         );
-     }
- // backtracking
-    public void runBacktrackingDemo(
-            ConstraintData data
-    ) {
-        BacktrackingSolver solver =
-                new BacktrackingSolver();
-
-        ScheduleResult result =
-                solver.solve(data);
-
-
-        System.out.println();
-        System.out.println(
-                "===== BACKTRACKING ====="
-        );
-
-
-        for (ScheduleEntry entry :
-                result.getScheduledEntries()) {
-
-            System.out.println(
-                    entry.getClassOccurrence().getId()
-                            + " | "
-                            + entry.getTimeSlot().getDay()
-                            + " "
-                            + entry.getTimeSlot().getStartTime()
-                            + " | Room: "
-                            + entry.getRoom().getId()
-                            + " | Waste: "
-                            + entry.getWastedSeats()
-            );
-        }
-
-
-        System.out.println();
-        System.out.println("Unscheduled:");
-
-        for (ClassOccurrence occurrence :
-                result.getUnscheduledOccurrences()) {
-
-            System.out.println(
-                    occurrence.getId()
-            );
-        }
-
-
-        System.out.println(
-                "Total wasted seats: "
-                        + result.getTotalWastedSeats()
-        );
-    }
-
-     //all
-     public void runAllDemos(
-             ConstraintData data
-     ) {
-
-         runGreedyDemo(data);
-
-         Map<String, TimeSlot> timeAssignments =
-                 runGraphColoringDemo(data);
-
-         runDynamicProgrammingDemo(
-                 data,
-                 timeAssignments
-         );
-
-         runBacktrackingDemo(data);
-     }
-
 }

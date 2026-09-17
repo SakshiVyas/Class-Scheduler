@@ -16,6 +16,11 @@ public class Course {
         this.professorId = professorId;
     }
 
+    public Course(String id, String name, String professorId, int enrolledStudents) {
+        this(id, enrolledStudents, professorId);
+        this.name = name;
+    }
+
     public String getId() {
         return id;
     }

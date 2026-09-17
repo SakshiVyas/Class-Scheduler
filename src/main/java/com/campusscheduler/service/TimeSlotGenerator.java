@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Generates non-overlapping fixed slots from the calendar settings in constraints.json. */
 public class TimeSlotGenerator {
     private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 

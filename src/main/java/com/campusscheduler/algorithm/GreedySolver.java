@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
+@Component
 public class GreedySolver {
     public List<Course> sortCoursesBySize(List<Course> courses) {
         List<Course> sorted = new ArrayList<>(courses);

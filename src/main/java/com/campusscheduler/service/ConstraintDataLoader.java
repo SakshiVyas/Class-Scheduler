@@ -21,5 +21,3 @@ public class ConstraintDataLoader {
         );
     }
 }
-
-// whoever calls it must tell which file to load

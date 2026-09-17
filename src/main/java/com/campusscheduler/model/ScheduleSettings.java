@@ -2,7 +2,6 @@ package com.campusscheduler.model;
 
 import java.util.List;
 
-/** Simple calendar configuration used to derive fixed one-hour (or configured) slots. */
 public class ScheduleSettings {
     private List<String> workingDays;
     private String dayStartTime;

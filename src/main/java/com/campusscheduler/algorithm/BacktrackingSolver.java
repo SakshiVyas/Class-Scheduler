@@ -11,11 +11,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
+@Component
 public class BacktrackingSolver {
     private List<ScheduleEntry> bestSchedule = new ArrayList<>();
     private int bestWaste = Integer.MAX_VALUE;
     private List<TimeSlot> candidateSlots = List.of();
+    private long deadlineNanos;
+    private long nodesVisited;
+    private static final long DEFAULT_MAX_MILLIS = 5_000;
+    private static final long MAX_NODES = 1_000_000;
 
     private boolean sharesGroup(Course first, Course second, Map<String, List<String>> groups) {
         if (groups == null) return false;
@@ -43,6 +49,7 @@ public class BacktrackingSolver {
     }
 
     private void search(int index, List<Course> courses, ConstraintData data, List<ScheduleEntry> current) {
+        if (++nodesVisited > MAX_NODES || System.nanoTime() >= deadlineNanos) return;
         if (current.size() + courses.size() - index < bestSchedule.size()) return;
         if (index == courses.size()) { updateBest(current); return; }
         Course course = courses.get(index);
@@ -61,12 +68,12 @@ public class BacktrackingSolver {
     public ScheduleResult solve(ConstraintData data) {
         bestSchedule = new ArrayList<>();
         bestWaste = Integer.MAX_VALUE;
+        nodesVisited = 0;
+        long maxMillis = Long.getLong("scheduler.backtracking.maxMillis", DEFAULT_MAX_MILLIS);
+        deadlineNanos = System.nanoTime() + Math.max(1, maxMillis) * 1_000_000L;
         ConflictGraph graph = new ConflictGraph();
         graph.buildGraph(data);
         List<Course> courses = sortCoursesByDifficulty(data);
-        // More than one slot per course is never needed to find a feasible assignment.
-        // Limiting symmetric empty-slot choices keeps the recursive search bounded when
-        // the calendar generator produces a full working week.
         List<TimeSlot> generatedSlots = new TimeSlotGenerator().generate(data.getScheduleSettings());
         candidateSlots = generatedSlots.subList(0, Math.min(generatedSlots.size(), Math.max(1, courses.size())));
         search(0, courses, data, new ArrayList<>());
@@ -79,7 +86,6 @@ public class BacktrackingSolver {
         return result;
     }
 
-    /** Highest conflict degree first, then largest class first, to protect difficult placements. */
     public List<Course> sortCoursesByDifficulty(ConstraintData data) {
         ConflictGraph graph = new ConflictGraph();
         graph.buildGraph(data);

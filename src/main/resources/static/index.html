@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Campus Scheduler</title>
+  <style>
+    body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;color:#20242a}
+    button{padding:.55rem .9rem;cursor:pointer} input,select{padding:.5rem;margin-right:.5rem}
+    .status{margin:1rem 0;padding:.7rem;background:#f1f4f7;border-radius:4px;white-space:pre-wrap}
+    table{border-collapse:collapse;width:100%;margin-top:1rem}th,td{border:1px solid #d8dde3;padding:.5rem;text-align:left}th{background:#f1f4f7}
+  </style>
+</head>
+<body>
+  <h1>Campus Scheduler</h1>
+  <p>Data is loaded from the configured MySQL database.</p>
+  <section>
+    <input id="csv" type="file" accept=".csv">
+    <button id="upload">Import students</button>
+    <select id="algorithm"><option value="backtracking">Backtracking</option><option value="greedy">Greedy</option></select>
+    <button id="run">Generate schedule</button>
+  </section>
+  <div id="status" class="status">Ready.</div>
+  <h2>Scheduled courses</h2><table><thead><tr><th>Course</th><th>Day</th><th>Time</th><th>Room</th><th>Waste</th></tr></thead><tbody id="scheduled"></tbody></table>
+  <h2>Unscheduled courses</h2><ul id="unscheduled"></ul>
+  <script>
+    const status=document.getElementById('status');
+    const show=(message)=>status.textContent=message;
+    document.getElementById('upload').onclick=async()=>{
+      const file=document.getElementById('csv').files[0]; if(!file){show('Choose a CSV file first.');return;}
+      const form=new FormData(); form.append('file',file); show('Importing students...');
+      const r=await fetch('/api/data/students/import',{method:'POST',body:form});
+      show(r.ok ? `Imported ${(await r.json()).imported} students.` : await r.text());
+    };
+    document.getElementById('run').onclick=async()=>{
+      show('Generating schedule...'); const algorithm=document.getElementById('algorithm').value;
+      const r=await fetch('/api/schedules?algorithm='+algorithm); if(!r.ok){show(await r.text());return;}
+      const data=await r.json(); document.getElementById('scheduled').innerHTML=data.scheduledEntries.map(e=>`<tr><td>${e.course.id}</td><td>${e.timeSlot.day}</td><td>${e.timeSlot.startTime}</td><td>${e.room.id}</td><td>${e.wastedSeats}</td></tr>`).join('');
+      document.getElementById('unscheduled').innerHTML=data.unscheduledCourses.map(c=>`<li>${c.id}</li>`).join('');
+      show(`Scheduled ${data.scheduledEntries.length}; unscheduled ${data.unscheduledCourses.length}; wasted seats ${data.totalWastedSeats}.`);
+    };
+  </script>
+</body>
+</html>

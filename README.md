@@ -1,19 +1,21 @@
 # Class Scheduler
 
-## TLDR
-
 Class Scheduler builds a university timetable for 5,000 students, 300 professors and 50 rooms. It combines greedy scheduling, Welsh-Powell graph colouring, dynamic programming and bounded backtracking with MySQL, a REST API and a browser UI.
 
 ## Run
 
 Requirements: Java 21 and MySQL 8.
 
+Download [`class-scheduler.jar`](https://github.com/SakshiVyas/Class-Scheduler/releases/download/v0.0/class-scheduler.jar) from the [v0.0 release](https://github.com/SakshiVyas/Class-Scheduler/releases/tag/v0.0).
+
 ```bash
 DB_USERNAME=root DB_PASSWORD=your_password \
-java -jar target/class-scheduler.jar --spring.profiles.active=demo
+java -jar class-scheduler.jar --spring.profiles.active=demo
 ```
 
 Open [http://localhost:8080](http://localhost:8080). The `demo` profile imports the bundled CSV dataset when the database is empty. Connect DataGrip to `localhost:3306/class_scheduler` with the same credentials.
+
+Release SHA-256: `bc6a08174737fbd4fd50bc8bc0474ffa59e3f015e2cf8b521d8240ec60659780`
 
 ## Algorithms
 

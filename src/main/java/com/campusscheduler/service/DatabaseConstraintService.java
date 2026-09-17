@@ -30,8 +30,8 @@ public class DatabaseConstraintService {
         ScheduleSettings settings = new ScheduleSettings();
         settings.setWorkingDays(List.of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"));
         settings.setDayStartTime("09:00");
-        settings.setDayEndTime("17:00");
-        settings.setSlotMinutes(60);
+        settings.setDayEndTime("18:00");
+        settings.setSlotMinutes(180);
         data.setScheduleSettings(settings);
         Map<String,List<String>> groups = new LinkedHashMap<>();
         for (StudentEntity student : students.findAll()) {

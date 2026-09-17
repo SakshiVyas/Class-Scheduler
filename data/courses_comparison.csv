@@ -1,0 +1,6 @@
+id,name,professor_id,enrolled_students
+C_SMALL,Small Seminar,P001,20
+C_MEDIUM,Medium Seminar,P002,35
+C_LARGE,Large Lecture,P003,60
+C_GROUP_A,Group A Lab,P004,25
+C_GROUP_B,Group B Lab,P005,25

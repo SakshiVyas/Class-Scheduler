@@ -8,7 +8,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 (id, name);
 
-LOAD DATA LOCAL INFILE '/Users/sakshivyas/Downloads/Class Scheduler/data/courses_test.csv'
+LOAD DATA LOCAL INFILE '/Users/sakshivyas/Downloads/Class Scheduler/data/courses_comparison.csv'
 REPLACE INTO TABLE courses
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -16,7 +16,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 (id, name, professor_id, enrolled_students);
 
-LOAD DATA LOCAL INFILE '/Users/sakshivyas/Downloads/Class Scheduler/data/rooms_test.csv'
+LOAD DATA LOCAL INFILE '/Users/sakshivyas/Downloads/Class Scheduler/data/rooms_comparison.csv'
 REPLACE INTO TABLE rooms
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'
@@ -24,7 +24,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 LINES
 (id, capacity);
 
-LOAD DATA LOCAL INFILE '/Users/sakshivyas/Downloads/Class Scheduler/data/students_test.csv'
+LOAD DATA LOCAL INFILE '/Users/sakshivyas/Downloads/Class Scheduler/data/students_comparison.csv'
 REPLACE INTO TABLE students
 FIELDS TERMINATED BY ','
 OPTIONALLY ENCLOSED BY '"'

@@ -20,7 +20,7 @@ public class BacktrackingSolver {
     private List<TimeSlot> candidateSlots = List.of();
     private long deadlineNanos;
     private long nodesVisited;
-    private static final long DEFAULT_MAX_MILLIS = 5_000;
+    private static final long DEFAULT_MAX_MILLIS = 30_000;
     private static final long MAX_NODES = 1_000_000;
 
     private boolean sharesGroup(Course first, Course second, Map<String, List<String>> groups) {
@@ -71,8 +71,6 @@ public class BacktrackingSolver {
         nodesVisited = 0;
         long maxMillis = Long.getLong("scheduler.backtracking.maxMillis", DEFAULT_MAX_MILLIS);
         deadlineNanos = System.nanoTime() + Math.max(1, maxMillis) * 1_000_000L;
-        ConflictGraph graph = new ConflictGraph();
-        graph.buildGraph(data);
         List<Course> courses = sortCoursesByDifficulty(data);
         List<TimeSlot> generatedSlots = new TimeSlotGenerator().generate(data.getScheduleSettings());
         candidateSlots = generatedSlots.subList(0, Math.min(generatedSlots.size(), Math.max(1, courses.size())));
@@ -90,8 +88,16 @@ public class BacktrackingSolver {
         ConflictGraph graph = new ConflictGraph();
         graph.buildGraph(data);
         List<Course> courses = new ArrayList<>(data.getClasses());
-        courses.sort(Comparator.comparingInt((Course c) -> graph.getConflicts(c.getId()).size()).reversed()
+        List<TimeSlot> slots = new TimeSlotGenerator().generate(data.getScheduleSettings());
+        courses.sort(Comparator.comparingInt((Course c) -> feasiblePlacements(c, data.getRooms(), slots))
+                .thenComparing(Comparator.comparingInt((Course c) -> graph.getConflicts(c.getId()).size()).reversed())
                 .thenComparing(Comparator.comparingInt(Course::getEnrolledStudents).reversed()));
         return courses;
+    }
+
+    private int feasiblePlacements(Course course, List<Room> rooms, List<TimeSlot> slots) {
+        int count = 0;
+        for (Room room : rooms) if (room.getCapacity() >= course.getEnrolledStudents()) count += slots.size();
+        return count;
     }
 }
